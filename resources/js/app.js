@@ -1,30 +1,77 @@
 import Alpine from "alpinejs";
 
-const log = console.log;
-
 Alpine.store("typer", {
-    texts: "Lorem ipsum dolor sit amet consectetur adipisicing elit. Error delectus dolores quae tempore molestias. Rerum, quae beatae nihil asperiores incidunt animi provident dolore et magni, temporibus mollitia rem culpa nulla.",
+    mainTexts: "Here we go again!",
+    textsInput: "",
 
-    currentTextsArray: [],
-    tempTextsArray: [],
-    tempInputValue: "",
+    textBeingRendered: "",
+    arrayOfTextBeingRendered: [],
 
-    init() {
-        this.currentTextsArray = textsDivider(this.texts);
+    challengeStarted: false,
+
+    get mainTextWordsArray() {
+        return this.mainTexts.trim().split(/\s+/);
     },
 
-    checkLetter() {
-        log("here goes checker");
+    init() {
+        this.textBeingRendered = this.mainTexts;
+        this.arrayOfTextBeingRendered = this.mainTextWordsArray;
+    },
+
+    startChallenge() {
+        this.challengeStarted = true;
+        console.log("the challenge");
+
+        // const oneSecInterval = setInterval(() => {
+        //     console.log("interval");
+        // }, 1000);
+
+        setTimeout(() => {
+            // clearInterval(oneSecInterval);
+            this.challengeStarted = false;
+            console.log("challenge ended");
+        }, 3000);
     },
 
     inputChangeHandler(e) {
-        e.target.value = e.target.value.replace(/  +/g, " ");
-        this.tempTextsArray = textsDivider(e.target.value);
+        if (!this.challengeStarted) {
+            this.startChallenge;
+        }
+
+        let value = e.target.value;
+
+        value = value.replace(/\s+/g, " ").trimStart();
+        e.target.value = value;
+
+        this.textsInput = value;
+        this.updateTextBeingRendered();
+    },
+
+    updateTextBeingRendered() {
+        const inputWords = this.textsInput.trim().split(/\s+/);
+        const mainWords = this.mainTextWordsArray;
+
+        if (inputWords != "") {
+            // Build the rendered text
+            const renderedWords = [];
+
+            // Push typed words first
+            for (let i = 0; i < inputWords.length; i++) {
+                renderedWords.push(inputWords[i]);
+            }
+
+            // Push remaining mainTexts words that are not yet typed
+            for (let i = inputWords.length; i < mainWords.length; i++) {
+                renderedWords.push(mainWords[i]);
+            }
+
+            this.textBeingRendered = renderedWords.join(" ");
+            this.arrayOfTextBeingRendered = renderedWords;
+        } else {
+            this.arrayOfTextBeingRendered = this.mainTexts.trim().split(/\s+/);
+        }
+        return this.arrayOfTextBeingRendered;
     },
 });
-
-function textsDivider(texts) {
-    return texts.trim().split(/\s+/);
-}
 
 Alpine.start();
