@@ -12,7 +12,7 @@ Alpine.store("typer", {
     challengeNotComplete: true,
     challengeStarted: false,
 
-    givenTime: 5,
+    givenTime: 3,
     timeShower: 0,
     accuracy: 0,
     wordsPerMinute: 0,
@@ -39,7 +39,11 @@ Alpine.store("typer", {
 
     inputChangeHandler(e) {
         if (!this.challengeStarted && this.challengeNotComplete) {
-            timer(this.challengeNotComplete, this.givenTime, this.timeShower);
+            this.timer(
+                this.challengeNotComplete,
+                this.givenTime,
+                this.timeShower
+            );
         }
         this.challengeStarted = true;
 
@@ -53,13 +57,38 @@ Alpine.store("typer", {
 
         let temp = this.arrayOfTextsInput.map((val, i) => {
             const original = this.mainTextsArrayFormat[i] || "";
-            return smartMerge(val, original);
+            return this.smartMerge(val, original);
         });
 
-        this.arrayOfTextBeingRendered = mergeMain(
+        this.arrayOfTextBeingRendered = this.mergeMain(
             temp,
             this.mainTextsArrayFormat
         );
+    },
+
+    smartMerge(userInput, original) {
+        if (!userInput) return original;
+
+        userInput = userInput;
+        original = original;
+
+        for (let i = userInput.length; i >= 0; i--) {
+            return userInput + original.slice(i);
+        }
+
+        return original;
+    },
+
+    mergeMain(mergedUserInput, mainTextsArrayFormat) {
+        let temp = [];
+        for (let i = 0; i < mainTextsArrayFormat.length; i++) {
+            if (mergedUserInput[i] != undefined) {
+                temp[i] = mergedUserInput[i];
+            } else {
+                temp[i] = mainTextsArrayFormat[i];
+            }
+        }
+        return temp;
     },
 
     letterChecker(wordIndex, letterIndex) {
@@ -69,70 +98,46 @@ Alpine.store("typer", {
         if (!mainWord) return "text-gray-600";
         if (!userWord) return "text-gray-600";
 
+        console.log(
+            userWord,
+            mainWord,
+            userWord[letterIndex],
+            mainWord[letterIndex]
+        );
         if (userWord[letterIndex] === undefined) return "text-gray-600";
 
         return userWord[letterIndex] === mainWord[letterIndex]
             ? "text-white"
             : "text-red-500";
     },
-    restart() {},
+    timer() {
+        this.timeShower = this.givenTime;
+
+        let counterInterval = setInterval(() => {
+            this.timeShower--;
+
+            if (this.timeShower <= 0) {
+                clearInterval(counterInterval);
+
+                this.scoreChecker();
+
+                this.challengeNotComplete = false;
+            }
+        }, 1000);
+    },
+
+    scoreChecker() {
+        this.wordsPerMinute =
+            this.arrayOfTextsInput.length / (this.givenTime / 60);
+
+        let count = 0;
+        for (let i = 0; i < this.arrayOfTextsInput.length; i++) {
+            if (this.arrayOfTextsInput[i] === this.mainTextsArrayFormat[i]) {
+                count++;
+            }
+        }
+        this.accuracy = (count / this.arrayOfTextsInput.length) * 100;
+    },
 });
-
-function mergeMain(mergedUserInput, mainTextsArrayFormat) {
-    let temp = [];
-    for (let i = 0; i < mainTextsArrayFormat.length; i++) {
-        if (mergedUserInput[i] != undefined) {
-            temp[i] = mergedUserInput[i];
-        } else {
-            temp[i] = mainTextsArrayFormat[i];
-        }
-    }
-    return temp;
-}
-
-function smartMerge(userInput, original) {
-    if (!userInput) return original;
-
-    userInput = userInput;
-    original = original;
-
-    for (let i = userInput.length; i >= 0; i--) {
-        return userInput + original.slice(i);
-    }
-
-    return original;
-}
-
-function timer() {
-    let store = Alpine.store("typer");
-
-    store.timeShower = store.givenTime;
-
-    let counterInterval = setInterval(() => {
-        store.timeShower--;
-
-        if (store.timeShower <= 0) {
-            clearInterval(counterInterval);
-
-            scoreChecker();
-
-            store.challengeNotComplete = false;
-        }
-    }, 1000);
-}
-
-function scoreChecker() {
-    let store = Alpine.store("typer");
-    store.wordsPerMinute =
-        store.arrayOfTextsInput.length / (store.givenTime / 60);
-
-    let count = 0;
-    for (let i = 0; i < store.arrayOfTextsInput.length; i++) {
-        if (store.arrayOfTextsInput[i] === store.mainTextsArrayFormat[i]) {
-            count++;
-        }
-    }
-    store.accuracy = (count / store.arrayOfTextsInput.length) * 100;
-}
 
 Alpine.start();
